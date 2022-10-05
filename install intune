@@ -1,0 +1,9 @@
+
+Install-Module -Name Microsoft.Graph.Intune
+
+import-Module -Name Microsoft.Graph.Intune
+Get-Command -module Microsoft.Graph.Intune | out-Gridview
+
+
+Connect-MSGraph 
+
