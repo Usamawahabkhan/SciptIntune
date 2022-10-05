@@ -1,0 +1,48 @@
+# Your tenant name
+$TenantName = "M365x91711639.onmicrosoft.com"
+# Cert store you want the created certificate to be stored
+$StoreLocation = "Cert:\CurrentUser\My"
+# Expiration date of the new certificate (set to X=5 years from present date)
+$ExpirationDate    = (Get-Date).AddYears(5)
+#Details with which to prepare the certificate 
+$CreateCert = @{
+    FriendlyName = "Graph PowerShell Script"
+    DnsName = $TenantName
+    CertStoreLocation = $StoreLocation
+    NotAfter = $ExpirationDate
+    KeyExportPolicy = "Exportable"
+    KeySpec = "Signature"
+    Provider = "Microsoft Enhanced RSA and AES Cryptographic Provider"
+    HashAlgorithm = "SHA256"
+}
+# Create certificate
+$Certificate = New-SelfSignedCertificate @CreateCert
+# Set certificate path to store created cert
+$CertificatePath = Join-Path -Path $StoreLocation -ChildPath $Certificate.Thumbprint
+# Export the certificate without the private key to the export path
+$ExportPathCheck = "C:\Temp"
+If (!(Test-Path -Path $ExportPathCheck)){
+mkdir  $ExportPathCheck
+$CerOutPath = "C:\Temp\PowerShellGraphCert.cer"
+Export-Certificate -Cert $CertificatePath -FilePath $CerOutPath | Out-Null
+}
+else
+{
+$CerOutPath = "C:\Temp\PowerShellGraphCert.cer"
+Export-Certificate -Cert $CertificatePath -FilePath $CerOutPath | Out-Null
+}
+
+
+Connect-MgGraph -ClientId "xxxx" -TenantId "xx" -Certificate $Certificate
+
+Write-Host "USERS:"
+Write-Host "======================================================"
+# List first 50 users
+Get-MgUser -Property "id,displayName" -PageSize 50 | Format-Table DisplayName, Id
+
+Write-Host "GROUPS:"
+Write-Host "======================================================"
+# List first 50 groups
+Get-MgGroup -Property "id,displayName" -PageSize 50 | Format-Table DisplayName, Id
+
+# Disconnect
